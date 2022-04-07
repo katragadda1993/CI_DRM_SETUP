@@ -1,0 +1,27 @@
+#!/bin/sh
+
+if [ -z $1 ]
+then
+	echo "\e[34mprovide CI_DII build number as argument\e[0m"
+	echo "\e[33mdownload_kconfig 5087\e[0m"
+	exit 1
+fi
+
+echo  "\e[33mDownloading kernel config of DII_$1_prerelease\e[0m"
+
+
+rm kconfig  >/dev/null 2>&1
+
+wget http://intel-gfx-ci-internal.igk.intel.com/archive/deploy/DII_$1_prerelease/kconfig  >/dev/null 2>&1
+ret=$?
+
+if [ $ret != 0 ]
+
+then
+	echo "\e[31mDownload Failed DII_$1_prerelease\e[0m"
+	exit 1
+fi
+
+cp kconfig .config
+
+echo "\e[32mPlease Edit .config According to your requirement\e[0m"

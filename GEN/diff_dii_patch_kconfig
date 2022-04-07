@@ -1,0 +1,27 @@
+#!/bin/sh
+
+if [ -z $1 ]
+then
+	echo "\e[34mprovide patchwork build number as argument\e[0m"
+	echo "\e[33mdiff_dii_patch_kconfig 12507v1\e[0m"
+	exit 1
+fi
+
+rm kconfig  kconfig_prerelease kconfig_pending-upstream  >/dev/null 2>&1
+
+echo  "\e[33mDownloading kernel config of DIIPW_$1_prerelease\e[0m"
+wget http://intel-gfx-ci-internal.igk.intel.com/archive/deploy/DIIPW_$1_prerelease/kconfig -O kconfig_prerelease >/dev/null 2>&1
+echo  "\e[33mDownloading kernel config of DIIPW_$1\e[0m"
+wget http://intel-gfx-ci-internal.igk.intel.com/archive/deploy/DIIPW_$1/kconfig -O kconfig >/dev/null 2>&1
+echo  "\e[33mDownloading kernel config of DIIPW_$1_pending-upstream\e[0m"
+wget http://intel-gfx-ci-internal.igk.intel.com/archive/deploy/DIIPW_$1_pending-upstream/kconfig -O kconfig_pending-upstream >/dev/null 2>&1
+ret=$?
+
+if [ $ret != 0 ]
+
+then
+	echo "\e[31mDownload Failed DIIPW_$1_prerelease\e[0m"
+	exit 1
+fi
+
+vimdiff kconfig_prerelease kconfig kconfig_pending-upstream

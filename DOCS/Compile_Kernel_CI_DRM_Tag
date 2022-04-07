@@ -1,0 +1,105 @@
+
+***************************************
+CI_DRM INTEL kernel CI tags 
+[ which incudes tags like drm-tip,CI_DRM,kasan,linux-next and etc.]
+***************************************
+
+1. Install Dependent Packages for Kernel Compilation 
+
+sudo apt-get install vim vim-gtk3 vim-tiny vim-athena vim-gtk vim-nox exuberant-ctags build-essential git libncurses5 libncurses5-dev libncursesw5-dev libelf-dev binutils-dev device-tree-compiler bc rsync htop iotop libssl-dev bison flex 
+
+
+2. Download kernel repo with all ci tags 
+
+        git clone https://anongit.freedesktop.org/git/gfx-ci/linux.git/  [ will take 15-20 min time ] 
+
+3. git pull --tags  [ it will fetch updated tags from remote repo].
+
+4. git tag [ list out tags ]
+
+   git show intel/CI_DRM_10680
+
+   git log --all --oneline --graph  [ it will show graph of tags with commits] 
+
+5.There are two ways go to particular ci tag
+ 
+    a) by creating new branch 
+
+       git checkout intel/CI_DRM_10680 -b CI_DRM_10680
+
+
+    b) by resetting HEAD commit to tag commit id
+
+	git show intel/CI_DRM_10680
+
+	git reset --hard a5be335f84415ea2d1898be94f5c9a338520aaf5 
+
+	now head will pointing to CI_DRM_10680
+
+**********************************************
+Kernel compilation 
+**********************************************
+
+1. git clean -xdf [ it will remove local changes ] 
+
+2. make mrproper
+
+3. Download kernel config file from below link.
+
+   wget http://gfx-ci.fi.intel.com/archive/deploy/logs/CI_DRM_10680/kernel.config.bz2
+
+   if building for 32 bit
+
+   wget http://gfx-ci.fi.intel.com/archive/deploy/logs/CI_DRM_10680/kernel_32bit.config.bz2
+
+   bzip2 -d kernel.config.bz2 ( or ) bzip2 -d kernel_32bit.config.bz2
+
+4. cp kernel.config to .config
+
+5. Before compile please change  CONFIG_LOCALVERSION  name required in .config
+    * don't use capital charcaters.
+    * don't use '_' char
+
+     vi .config
+
+     CONFIG_LOCALVERSION="-CI-CI_DRM_10680" changed to CONFIG_LOCALVERSION="-ci-drm-10680"
+
+6. make menuconfig
+
+7. make -j64 deb-pkg [ conventional method ]
+
+         (or)
+
+   make -j64 bindeb-pkg [ faster method build debians and it won't create source backup]
+
+8. cd .. [ if make sucess it will create .deb packges ]
+
+    need to send all .deb files to DUT machine
+
+9. Installation steps [ DUT ]  
+
+   a) sudo dpkg -i *.deb
+
+   b) sudo grub-mkconfig -o /boot/grub/grub.cfg
+
+   c) awk -F\' '/menuentry / {print $2}' /boot/grub/grub.cfg  [ check kernel image positon according to change follwing command] 
+    
+   d) sudo grub-reboot "1 > 2"  //to boot with particular kimage [ if compiled kernel higher version than installed one no need run this command ]
+
+   e) reboot
+
+************************************************
+i915 Module Compilation [ This will applicable install module when already installed using .deb kernel] 
+************************************************
+
+1. drivers/gpu/drm/i915/Makefile and remove -Werror flag
+
+2. make -C . M=drivers/gpu/drm/i915/ -j32
+
+3. scp drivers/gpu/drm/i915/i915.ko DUT machine
+
+4. sudo cp i915.ko  /lib/modules/$(uname -r)/kernel/drivers/gpu/drm/i915/i915.ko
+
+5. update-initramfs -u
+
+6. reboot

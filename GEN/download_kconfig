@@ -1,0 +1,47 @@
+#!/bin/sh
+
+config_file=kernel.config.bz2
+
+if [ -z $1 ]
+then
+	echo "\e[34mprovide CI_DRM build number as argument\e[0m"
+	echo "\e[33mdownload_kconfig 10780\e[0m"
+	exit 1
+fi
+
+echo  "\e[33mDownloading kernel config of CI_DRM_$1\e[0m"
+
+
+rm $config_file kernel.config  >/dev/null 2>&1
+
+wget http://gfx-ci.fi.intel.com/archive/deploy/logs/CI_DRM_$1/$config_file  >/dev/null 2>&1
+ret=$?
+
+if [ $ret != 0 ]
+
+then
+	config_file=kernel_32bit.config.bz2
+	rm $config_file kernel_32bit.config
+	wget http://gfx-ci.fi.intel.com/archive/deploy/logs/CI_DRM_$1/$config_file   >/dev/null 2>&1
+	ret=$?
+	if [ $ret != 0 ]
+	then
+	echo "\e[31mDownload Failed CI_DRM_$1\e[0m"
+	exit 1
+	fi
+	bzip2 -d $config_file
+	cp kernel_32bit.config .config
+	echo "\e[32mPlease Edit .config According to your requirement\e[0m"
+	exit 0
+
+fi
+
+mkdir /home/mastan/worksapce/config_files/CI_DRM_$1
+
+cp $config_file /home/mastan/worksapce/config_files/CI_DRM_$1
+
+bzip2 -d $config_file
+
+cp kernel.config .config
+
+echo "\e[32mPlease Edit .config According to your requirement\e[0m"
