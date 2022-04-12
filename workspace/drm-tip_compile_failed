@@ -1,0 +1,10 @@
+
+drm-tip kernel build Failure due to security keys: Fixed
+
+1. while compileing drm-tip kernel stock ubuntu OS [20.04] seen certificate kernel config issue observed.
+
+2. it has been resolved by below source link.
+
+   https://askubuntu.com/questions/1329538/compiling-the-kernel-5-11-11
+
+
